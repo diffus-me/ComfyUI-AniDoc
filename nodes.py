@@ -35,6 +35,8 @@ from comfy.utils import ProgressBar
 from comfy.model_management import XFORMERS_IS_AVAILABLE
 import folder_paths
 
+import execution_context
+
 log = logging.getLogger("AniDoc")
 
 DIFFUSERS_DIR = os.path.join(folder_paths.models_dir, "diffusers")
@@ -158,11 +160,11 @@ class AniDocLoader:
 
 class LoadAniDocCoTracker:
     @classmethod
-    def INPUT_TYPES(cls):
+    def INPUT_TYPES(cls, context: execution_context.ExecutionContext):
         return {
             "required": {
                 "tracking": ("BOOLEAN", {"default": True}),
-                "cotracker_model": (folder_paths.get_filename_list("cotracker"),),
+                "cotracker_model": (folder_paths.get_filename_list(context, "cotracker"),),
                 "tracker_shift_grid": ([0, 1], {"default": 0}),
                 "tracker_grid_size": (
                     "INT",
@@ -175,6 +177,9 @@ class LoadAniDocCoTracker:
                     {"default": 50, "min": 10, "max": 100, "step": 5},
                 ),
             },
+            "hidden": {
+                "context": "EXECUTION_CONTEXT",
+            }
         }
 
     RETURN_TYPES = ("ANIDOC_COTRACKER",)
@@ -200,6 +205,7 @@ class LoadAniDocCoTracker:
         max_points,
         device="cuda",
         dtype=torch.float32,
+        context: execution_context.ExecutionContext=None,
     ):
         try:
             import cotracker
@@ -209,7 +215,7 @@ class LoadAniDocCoTracker:
         if tracking:
             if self.tracker is None or self.tracker_shift_grid != tracker_shift_grid:
                 cotracker_model_path = folder_paths.get_full_path(
-                    "cotracker", cotracker_model
+                    context, "cotracker", cotracker_model
                 )
 
                 log.info(f"Loading tracker model from {cotracker_model_path}")

@@ -947,7 +947,7 @@ class UNetSpatioTemporalConditionModel(ModelMixin, ConfigMixin, UNet2DConditionL
                 # if device_map is None, load the state dict and move the params from meta device to the cpu
                 if device_map is None:
                     param_device = "cpu"
-                    state_dict = load_state_dict(model_file, variant=variant)
+                    state_dict = load_state_dict(model_file)
 
                     # if not custom_resume:
                     #     # NOTE update conv_in_weight
@@ -961,7 +961,7 @@ class UNetSpatioTemporalConditionModel(ModelMixin, ConfigMixin, UNet2DConditionL
                     #     mask_token = torch.randn(1, 1, 4, 1, 1).to(conv_in_weight.device).to(conv_in_weight.dtype)
                     #     state_dict["mask_token"] = mask_token
 
-                    model._convert_deprecated_attention_blocks(state_dict)
+                    # model._convert_deprecated_attention_blocks(state_dict)
                     # move the params from meta device to cpu
                     missing_keys = set(model.state_dict().keys()) - set(state_dict.keys())
                     if len(missing_keys) > 0:
@@ -975,7 +975,7 @@ class UNetSpatioTemporalConditionModel(ModelMixin, ConfigMixin, UNet2DConditionL
                     unexpected_keys = load_model_dict_into_meta(
                         model,
                         state_dict,
-                        device=param_device,
+                        # device=param_device,
                         dtype=torch_dtype,
                         model_name_or_path=pretrained_model_name_or_path,
                     )
@@ -984,10 +984,10 @@ class UNetSpatioTemporalConditionModel(ModelMixin, ConfigMixin, UNet2DConditionL
                         for pat in cls._keys_to_ignore_on_load_unexpected:
                             unexpected_keys = [k for k in unexpected_keys if re.search(pat, k) is None]
 
-                    if len(unexpected_keys) > 0:
-                        logger.warn(
-                            f"Some weights of the model checkpoint were not used when initializing {cls.__name__}: \n {[', '.join(unexpected_keys)]}"
-                        )
+                    # if len(unexpected_keys) > 0:
+                    #     logger.warn(
+                    #         f"Some weights of the model checkpoint were not used when initializing {cls.__name__}: \n {[', '.join(unexpected_keys)]}"
+                    #     )
 
                 else:  # else let accelerate handle loading and dispatching.
                     # Load weights and dispatch according to the device_map
